@@ -14,23 +14,23 @@ import {
 
 const Sidebar: React.FC = () => {
   return (
-    <aside className="w-64 border-r border-dark-border bg-sidebar flex flex-col h-full">
+    <aside className="w-64 border-r border-dark-border bg-sidebar flex flex-col h-full relative z-10 backdrop-blur-lg bg-dark/60">
       <div className="p-6">
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded bg-electric flex items-center justify-center">
+          <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
             <RefreshCw size={18} className="text-black" />
           </div>
-          <span className="font-bold text-xl">SyncPro</span>
+          <span className="font-bold text-xl">SmartProduct</span>
         </div>
       </div>
       
       <nav className="flex-1 px-4 space-y-1">
-        <SidebarLink icon={<Home size={20} />} to="/" label="Dashboard" active />
+        <SidebarLink icon={<Home size={20} />} to="/" label="Inicio" active />
         <SidebarLink icon={<Database size={20} />} to="/proveedores" label="Proveedores" />
         <SidebarLink icon={<Link2 size={20} />} to="/mapeo" label="Mapeo" />
         <SidebarLink icon={<RefreshCw size={20} />} to="/sincronizacion" label="Sincronización" />
         <SidebarLink icon={<BarChart size={20} />} to="/estadisticas" label="Estadísticas" />
-        <SidebarLink icon={<FileText size={20} />} to="/logs" label="Logs" />
+        <SidebarLink icon={<FileText size={20} />} to="/logs" label="Registros" />
       </nav>
       
       <div className="p-4 border-t border-dark-border">
@@ -54,14 +54,14 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ icon, to, label, active }) =>
       to={to}
       className={`flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
         active 
-          ? "bg-electric/10 text-electric electric-glow" 
-          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-electric"
+          ? "bg-primary/10 text-primary electric-glow" 
+          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary"
       }`}
     >
       {icon}
       <span>{label}</span>
       {active && (
-        <div className="ml-auto h-2 w-2 rounded-full bg-electric animate-pulse-glow"></div>
+        <div className="ml-auto h-2 w-2 rounded-full bg-primary animate-pulse-glow"></div>
       )}
     </Link>
   );

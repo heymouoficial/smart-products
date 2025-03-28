@@ -17,7 +17,7 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
   const getIcon = (type: ActivityItem["type"]) => {
     switch (type) {
       case "sync":
-        return <RefreshCw size={16} className="text-electric" />;
+        return <RefreshCw size={16} className="text-primary" />;
       case "error":
         return <AlertCircle size={16} className="text-red-400" />;
       case "update":
@@ -28,7 +28,7 @@ const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
   };
 
   return (
-    <div className="rounded-xl p-6 card-gradient border border-dark-border">
+    <div className="rounded-xl p-6 glass border border-white/10">
       <h3 className="font-semibold mb-4">Actividad Reciente</h3>
       <div className="space-y-4">
         {activities.map((activity) => (

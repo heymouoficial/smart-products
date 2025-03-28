@@ -22,10 +22,10 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   logo
 }) => {
   return (
-    <div className="rounded-xl p-6 card-gradient border border-dark-border hover:border-electric/50 transition-all">
+    <div className="rounded-xl p-6 glass border border-white/10 hover:border-primary/50 transition-all">
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md flex items-center justify-center bg-electric/10 text-electric">
+          <div className="h-10 w-10 rounded-md flex items-center justify-center bg-primary/10 text-primary">
             {logo ? <img src={logo} alt={name} className="h-6 w-6" /> : <Link2 size={20} />}
           </div>
           <div>
@@ -45,7 +45,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           </div>
         </div>
         
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-electric">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
           <ExternalLink size={18} />
         </Button>
       </div>
@@ -65,7 +65,7 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
             </span>
           )}
           
-          <Button size="sm" className="ml-auto bg-electric hover:bg-electric-dark text-white">
+          <Button size="sm" className="ml-auto bg-primary hover:bg-electric-dark text-white">
             Sincronizar
           </Button>
         </div>

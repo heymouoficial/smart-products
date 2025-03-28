@@ -13,6 +13,7 @@ import {
   Download,
   RefreshCw
 } from "lucide-react";
+import { Button as MovingButton } from "@/components/ui/moving-border";
 
 const Proveedores: React.FC = () => {
   return (
@@ -22,9 +23,14 @@ const Proveedores: React.FC = () => {
           <h1 className="text-2xl font-bold">Proveedores</h1>
           <p className="text-muted-foreground">Gestiona tus proveedores de productos</p>
         </div>
-        <Button className="bg-electric hover:bg-electric-dark text-white">
+        <MovingButton 
+          containerClassName="w-auto h-10"
+          borderClassName="bg-[radial-gradient(var(--primary)_40%,transparent_60%)]"
+          className="bg-dark/50 border-dark-border text-sm h-full"
+          borderRadius="0.5rem"
+        >
           <Plus size={18} className="mr-2" /> Nuevo Proveedor
-        </Button>
+        </MovingButton>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -33,10 +39,10 @@ const Proveedores: React.FC = () => {
           <Input placeholder="Buscar proveedores..." className="pl-10" />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-electric/30 text-electric hover:bg-electric/10">
+          <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
             <RefreshCw size={18} className="mr-2" /> Sincronizar Todo
           </Button>
-          <Button variant="outline" className="border-electric/30 text-electric hover:bg-electric/10">
+          <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
             <Download size={18} className="mr-2" /> Exportar
           </Button>
         </div>
@@ -69,8 +75,8 @@ const Proveedores: React.FC = () => {
               lastSync="Hace 1 día"
             />
             
-            <div className="flex items-center justify-center rounded-xl p-6 border border-dashed border-dark-border hover:border-electric/50 transition-all h-[300px]">
-              <Button variant="outline" className="border-electric/30 text-electric hover:bg-electric/10">
+            <div className="flex items-center justify-center rounded-xl p-6 border border-dashed border-white/10 hover:border-primary/50 transition-all h-[300px] backdrop-blur-md">
+              <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
                 <Plus size={18} className="mr-2" /> Añadir Proveedor
               </Button>
             </div>
@@ -118,10 +124,10 @@ const ProviderDetailCard: React.FC<ProviderDetailCardProps> = ({
   lastSync
 }) => {
   return (
-    <div className="rounded-xl p-6 card-gradient border border-dark-border hover:border-electric/50 transition-all">
+    <div className="rounded-xl p-6 glass border border-white/10 hover:border-primary/50 transition-all">
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md flex items-center justify-center bg-electric/10 text-electric">
+          <div className="h-10 w-10 rounded-md flex items-center justify-center bg-primary/10 text-primary">
             <Link2 size={20} />
           </div>
           <div>
@@ -141,7 +147,7 @@ const ProviderDetailCard: React.FC<ProviderDetailCardProps> = ({
           </div>
         </div>
         
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-electric">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
           <MoreHorizontal size={18} />
         </Button>
       </div>
@@ -151,7 +157,7 @@ const ProviderDetailCard: React.FC<ProviderDetailCardProps> = ({
           <p className="text-xs text-muted-foreground mb-1">URL del proveedor</p>
           <div className="flex items-center gap-2">
             <p className="text-sm truncate flex-1">{url}</p>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-electric h-6 w-6">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary h-6 w-6">
               <ExternalLink size={14} />
             </Button>
           </div>
@@ -177,7 +183,7 @@ const ProviderDetailCard: React.FC<ProviderDetailCardProps> = ({
             Ver detalles
           </Button>
           
-          <Button size="sm" className="bg-electric hover:bg-electric-dark text-white">
+          <Button size="sm" className="bg-primary hover:bg-electric-dark text-white">
             <RefreshCw size={14} className="mr-1" /> Sincronizar
           </Button>
         </div>

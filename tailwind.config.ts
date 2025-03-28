@@ -64,13 +64,13 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         electric: {
-          DEFAULT: "#33C3F0",
-          dark: "#1EAEDB",
-          light: "#61DAFB",
+          DEFAULT: "#1C61E7",
+          dark: "#1854CF",
+          light: "#3B7AF2",
         },
         dark: {
-          DEFAULT: "#121212",
-          card: "#1A1F2C",
+          DEFAULT: "#161616",
+          card: "#212121",
           border: "#2A2A2A",
         },
       },
@@ -90,10 +90,10 @@ export default {
         },
         "pulse-glow": {
           "0%, 100%": { 
-            boxShadow: "0 0 5px rgba(51, 195, 240, 0.5)" 
+            boxShadow: "0 0 5px rgba(28, 97, 231, 0.5)" 
           },
           "50%": { 
-            boxShadow: "0 0 15px rgba(51, 195, 240, 0.8)" 
+            boxShadow: "0 0 15px rgba(28, 97, 231, 0.8)" 
           },
         },
         "fade-in": {

@@ -23,7 +23,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   return (
     <div className={cn(
-      "rounded-xl p-6 card-gradient border border-dark-border transition-all hover:electric-glow",
+      "rounded-xl p-6 glass border border-white/10 transition-all hover:electric-glow",
       className
     )}>
       <div className="flex justify-between items-start">
@@ -46,7 +46,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
           )}
         </div>
         
-        <div className="h-10 w-10 rounded-md bg-electric/10 flex items-center justify-center text-electric">
+        <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center text-primary">
           {icon}
         </div>
       </div>

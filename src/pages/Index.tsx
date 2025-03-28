@@ -13,9 +13,10 @@ import {
   Store, 
   Plus
 } from "lucide-react";
+import { Button as MovingButton } from "@/components/ui/moving-border";
 
 const Dashboard: React.FC = () => {
-  // Mock data
+  // Datos de ejemplo
   const stats = [
     {
       id: "1",
@@ -101,12 +102,17 @@ const Dashboard: React.FC = () => {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold">Inicio</h1>
           <p className="text-muted-foreground">Bienvenido de nuevo, Admin</p>
         </div>
-        <Button className="bg-electric hover:bg-electric-dark text-white">
+        <MovingButton 
+          containerClassName="w-auto h-10"
+          borderClassName="bg-[radial-gradient(var(--primary)_40%,transparent_60%)]"
+          className="bg-dark/50 border-dark-border text-sm h-full"
+          borderRadius="0.5rem"
+        >
           <Plus size={18} className="mr-2" /> Nuevo Proveedor
-        </Button>
+        </MovingButton>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -129,8 +135,8 @@ const Dashboard: React.FC = () => {
               <ProviderCard key={provider.id} {...provider} />
             ))}
             
-            <div className="flex items-center justify-center rounded-xl p-6 border border-dashed border-dark-border hover:border-electric/50 transition-all h-full">
-              <Button variant="outline" className="border-electric/30 text-electric hover:bg-electric/10">
+            <div className="flex items-center justify-center rounded-xl p-6 border border-dashed border-white/10 hover:border-primary/50 transition-all h-full backdrop-blur-md">
+              <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
                 <Plus size={18} className="mr-2" /> Añadir Proveedor
               </Button>
             </div>

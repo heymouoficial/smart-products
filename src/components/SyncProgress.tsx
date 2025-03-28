@@ -16,12 +16,12 @@ const SyncProgress: React.FC<SyncProgressProps> = ({
   status
 }) => {
   return (
-    <div className="rounded-xl p-6 card-gradient border border-dark-border">
+    <div className="rounded-xl p-6 glass border border-white/10">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-semibold">Estado de Sincronización</h3>
         <div className={`px-2 py-1 rounded-full text-xs 
           ${status === "idle" ? "bg-muted text-muted-foreground" : 
-            status === "syncing" ? "bg-electric/20 text-electric animate-pulse" : 
+            status === "syncing" ? "bg-primary/20 text-primary animate-pulse" : 
             status === "completed" ? "bg-green-500/20 text-green-400" : 
             "bg-red-500/20 text-red-400"}`}>
           {status === "idle" ? "Inactivo" : 
@@ -36,7 +36,7 @@ const SyncProgress: React.FC<SyncProgressProps> = ({
         
         <div className="flex justify-between text-sm">
           <span>{syncedProducts} de {totalProducts} productos</span>
-          <span className="text-electric">{Math.round(progress)}%</span>
+          <span className="text-primary">{Math.round(progress)}%</span>
         </div>
         
         {status === "syncing" && (
