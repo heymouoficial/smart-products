@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link2, ExternalLink, Check, RefreshCw, Trash2, AlertCircle, Loader2 } from "lucide-react";
+import { Link2, ExternalLink, Check, RefreshCw, Trash2, AlertCircle, Loader2, Clock, Edit, BarChart, FileText } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useProviders } from "@/contexts/ProvidersContext";
@@ -16,6 +16,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import EditProviderDialog from "./EditProviderDialog";
+import ProductAnalysisDialog from "./ProductAnalysisDialog";
+import LogsDialog from "./LogsDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProviderCardProps {
   id: string;
@@ -27,6 +37,7 @@ interface ProviderCardProps {
   url: string;
   type: string;
   logo?: string;
+  scheduledSync?: boolean;
 }
 
 const ProviderCard: React.FC<ProviderCardProps> = ({
@@ -38,11 +49,13 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
   syncProgress,
   url,
   type,
-  logo
+  logo,
+  scheduledSync = false
 }) => {
-  const { syncProvider, removeProvider } = useProviders();
+  const { syncProvider, removeProvider, toggleScheduledSync } = useProviders();
   const { toast } = useToast();
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const isMobile = useIsMobile();
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -76,6 +89,10 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
     });
   };
 
+  const handleToggleScheduledSync = () => {
+    toggleScheduledSync(id);
+  };
+
   const openProviderUrl = () => {
     window.open(url, "_blank");
   };
@@ -100,13 +117,44 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
                  status === "inactive" ? "Inactivo" : 
                  "Error"}
               </span>
+              {scheduledSync && (
+                <span className="text-xs flex items-center text-blue-400">
+                  <Clock size={10} className="mr-1" /> Auto
+                </span>
+              )}
             </div>
           </div>
         </div>
         
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={openProviderUrl}>
-          <ExternalLink size={18} />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={openProviderUrl}>
+            <ExternalLink size={18} />
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+                <Edit size={18} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass border border-white/10">
+              <EditProviderDialog 
+                provider={{ 
+                  id, name, url, type: type as any, status, lastSync, productCount, syncProgress, logo 
+                }}
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+                    <Edit size={14} className="mr-2" /> Editar Proveedor
+                  </DropdownMenuItem>
+                }
+              />
+              <DropdownMenuItem onClick={handleToggleScheduledSync} className="cursor-pointer">
+                <Clock size={14} className="mr-2" /> 
+                {scheduledSync ? "Desactivar Auto-Sync" : "Activar Auto-Sync"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       
       <div className="space-y-3">
@@ -137,25 +185,90 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           )}
           
           <div className="flex gap-2 ml-auto">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 border-dark-border">
-                  <Trash2 size={14} className="text-muted-foreground hover:text-red-400" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="glass border border-white/10">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>¿Eliminar este proveedor?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Se eliminará permanentemente {name} y todos sus productos asociados.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="border-dark-border bg-background text-muted-foreground">Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleRemove} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {isMobile ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8 border-dark-border">
+                    <MoreHorizontal size={14} className="text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass border border-white/10">
+                  <ProductAnalysisDialog 
+                    provider={{ 
+                      id, name, url, type: type as any, status, lastSync, productCount, syncProgress, logo 
+                    }}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+                        <BarChart size={14} className="mr-2" /> Análisis de Productos
+                      </DropdownMenuItem>
+                    }
+                  />
+                  <LogsDialog 
+                    provider={{ 
+                      id, name, url, type: type as any, status, lastSync, productCount, syncProgress, logo 
+                    }}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer">
+                        <FileText size={14} className="mr-2" /> Ver Logs
+                      </DropdownMenuItem>
+                    }
+                  />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="cursor-pointer text-red-400">
+                        <Trash2 size={14} className="mr-2" /> Eliminar
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="glass border border-white/10">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar este proveedor?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Se eliminará permanentemente {name} y todos sus productos asociados.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-dark-border bg-background text-muted-foreground">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleRemove} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <ProductAnalysisDialog 
+                  provider={{ 
+                    id, name, url, type: type as any, status, lastSync, productCount, syncProgress, logo 
+                  }}
+                />
+                
+                <LogsDialog 
+                  provider={{ 
+                    id, name, url, type: type as any, status, lastSync, productCount, syncProgress, logo 
+                  }}
+                />
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8 border-dark-border">
+                      <Trash2 size={14} className="text-muted-foreground hover:text-red-400" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="glass border border-white/10">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar este proveedor?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Se eliminará permanentemente {name} y todos sus productos asociados.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="border-dark-border bg-background text-muted-foreground">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRemove} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )}
             
             <Button 
               size="sm" 

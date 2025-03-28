@@ -1,11 +1,11 @@
 
-// Este archivo sirve como un placeholder para integrar llm-scraper
-// En una implementación real, se conectaría con la biblioteca llm-scraper
+import { scrape } from 'llm-scraper';
+import { LLMConfig } from './llmService';
 
 export interface ScrapResult {
   success: boolean;
   message: string;
-  products?: Product[];
+  data?: any;
   error?: string;
 }
 
@@ -22,86 +22,87 @@ export interface Product {
   attributes?: Record<string, string>;
 }
 
-// Simula el proceso de scraping para demostración
-export const scrapWebsite = async (url: string): Promise<ScrapResult> => {
-  console.log(`[Scrap Service] Iniciando scraping de: ${url}`);
-  
-  // En una implementación real, aquí se usaría llm-scraper
-  // import { scrape } from 'llm-scraper';
-  
-  // Simula un retraso de red para la demostración
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  // Genera datos de ejemplo basados en la URL
-  const urlLower = url.toLowerCase();
-  
-  // Simula diferentes resultados basados en la URL
-  if (urlLower.includes('error')) {
-    console.log(`[Scrap Service] Error en scraping de: ${url}`);
-    return {
-      success: false,
-      message: "Error al conectar con el sitio web",
-      error: "El sitio web no está disponible o no permitió el scraping"
-    };
-  }
-  
-  // Genera un número aleatorio de productos
-  const productCount = Math.floor(Math.random() * 50) + 10;
-  const products: Product[] = [];
-  
-  for (let i = 0; i < productCount; i++) {
-    const id = `prod-${Math.random().toString(36).substring(2, 10)}`;
-    const categoryNames = ["Electrónica", "Ropa", "Hogar", "Deportes", "Juguetes"];
-    const randomCategory = categoryNames[Math.floor(Math.random() * categoryNames.length)];
-    
-    products.push({
-      id,
-      name: `Producto ${i + 1} de ${randomCategory}`,
-      price: Math.round(Math.random() * 10000) / 100,
-      currency: "EUR",
-      sku: `SKU-${Math.floor(Math.random() * 10000)}`,
-      description: `Descripción del producto ${i + 1}. Este es un producto de ejemplo.`,
-      images: [
-        `https://picsum.photos/seed/${id}/300/300`,
-        `https://picsum.photos/seed/${id}-1/300/300`
-      ],
-      stock: Math.floor(Math.random() * 100),
-      category: randomCategory,
-      attributes: {
-        color: ["Rojo", "Azul", "Negro", "Blanco"][Math.floor(Math.random() * 4)],
-        tamaño: ["S", "M", "L", "XL"][Math.floor(Math.random() * 4)]
+export const scrapWebsite = async (url: string, llmConfig: LLMConfig): Promise<ScrapResult> => {
+  try {
+    if (!llmConfig?.apiKey) {
+      throw new Error('Configuración LLM no disponible');
+    }
+
+    const result = await scrape({
+      url,
+      llm: {
+        apiKey: llmConfig.apiKey,
+        provider: llmConfig.provider,
+        model: llmConfig.model,
+        maxTokens: llmConfig.maxTokens
+      },
+      schema: {
+        products: [{
+          name: 'string',
+          price: 'number',
+          currency: 'string',
+          sku: 'string?',
+          description: 'string?',
+          images: 'string[]?',
+          stock: 'number?',
+          category: 'string?',
+          attributes: 'object?'
+        }]
       }
     });
+
+    if (!result.products || result.products.length === 0) {
+      return {
+        success: false,
+        message: 'No se encontraron productos',
+        error: 'El scraping no encontró datos estructurados'
+      };
+    }
+
+    return {
+      success: true,
+      message: `Se encontraron ${result.products.length} productos`,
+      data: result.products
+    };
+  } catch (error) {
+    console.error('[Scrap Service] Error:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error desconocido en el scraping',
+      error: error instanceof Error ? error.stack : undefined
+    };
   }
-  
-  console.log(`[Scrap Service] Scraping completado para: ${url}. Se encontraron ${products.length} productos`);
-  
-  return {
-    success: true,
-    message: `Se encontraron ${products.length} productos`,
-    products
-  };
 };
 
-// Función para mapear productos extraídos al formato WooCommerce
-export const mapToWooCommerceFormat = (products: Product[]) => {
+// Función para normalizar datos del scraper
+export const normalizeScrapData = (data: any): Product[] => {
+  return data.map((item: any) => ({
+    id: item.id || Math.random().toString(36).substring(2, 10),
+    name: item.name,
+    price: item.price,
+    currency: item.currency || 'USD',
+    sku: item.sku,
+    description: item.description,
+    images: item.images || [],
+    stock: item.stock,
+    category: item.category,
+    attributes: item.attributes || {}
+  }));
+};
+
+// Adaptador para WooCommerce
+export const adaptToWooCommerce = (products: Product[]) => {
   return products.map(product => ({
     name: product.name,
-    type: "simple",
-    regular_price: product.price.toString(),
+    type: 'simple',
+    regular_price: product.price.toFixed(2),
     description: product.description,
-    short_description: product.description?.substring(0, 100) + "...",
-    categories: [
-      {
-        name: product.category
-      }
-    ],
-    images: product.images?.map(src => ({
-      src
-    })),
-    attributes: Object.entries(product.attributes || {}).map(([name, option]) => ({
+    short_description: product.description?.substring(0, 100) + '...',
+    categories: product.category ? [{ name: product.category }] : [],
+    images: product.images?.map(src => ({ src })),
+    attributes: Object.entries(product.attributes).map(([name, value]) => ({
       name,
-      option
+      options: [value]
     })),
     sku: product.sku,
     stock_quantity: product.stock

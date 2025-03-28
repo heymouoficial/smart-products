@@ -5,6 +5,19 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  build: {
+    target: ['es2022', 'node20'],
+    commonjsOptions: {
+      include: [/node_modules\/node-llama-cpp/]
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom']
+        }
+      }
+    }
+  },
   server: {
     host: "::",
     port: 8080,

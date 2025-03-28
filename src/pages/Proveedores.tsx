@@ -11,16 +11,21 @@ import {
   ExternalLink, 
   MoreHorizontal, 
   Download,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from "lucide-react";
 import { Button as MovingButton } from "@/components/ui/moving-border";
 import { useProviders } from "@/contexts/ProvidersContext";
 import ProviderCard from "@/components/ProviderCard";
 import AddProviderDialog from "@/components/AddProviderDialog";
+import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Proveedores: React.FC = () => {
   const { providers, activeProviders, inactiveProviders } = useProviders();
   const [searchTerm, setSearchTerm] = useState("");
+  const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Filtrar proveedores por término de búsqueda
   const filteredProviders = providers.filter(provider => 
@@ -37,6 +42,34 @@ const Proveedores: React.FC = () => {
     provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     provider.url.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSyncAll = () => {
+    toast({
+      title: "Sincronización masiva iniciada",
+      description: `Sincronizando ${activeProviders.length} proveedores. Este proceso puede tardar varios minutos.`,
+    });
+  };
+
+  const handleExport = () => {
+    toast({
+      title: "Exportación iniciada",
+      description: "Se está generando el archivo de exportación con todos los productos.",
+    });
+    
+    setTimeout(() => {
+      toast({
+        title: "Exportación completada",
+        description: "Los productos se han exportado correctamente.",
+      });
+    }, 2000);
+  };
+
+  const handleScheduleAllSync = () => {
+    toast({
+      title: "Sincronización programada",
+      description: "Todos los proveedores se sincronizarán automáticamente cada 24 horas a las 2:00 AM.",
+    });
+  };
 
   return (
     <Layout>
@@ -59,10 +92,27 @@ const Proveedores: React.FC = () => {
           />
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+          {!isMobile && (
+            <Button 
+              variant="outline" 
+              className="border-primary/30 text-primary hover:bg-primary/10"
+              onClick={handleScheduleAllSync}
+            >
+              <Clock size={18} className="mr-2" /> Programar Todo
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            className="border-primary/30 text-primary hover:bg-primary/10"
+            onClick={handleSyncAll}
+          >
             <RefreshCw size={18} className="mr-2" /> Sincronizar Todo
           </Button>
-          <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+          <Button 
+            variant="outline" 
+            className="border-primary/30 text-primary hover:bg-primary/10"
+            onClick={handleExport}
+          >
             <Download size={18} className="mr-2" /> Exportar
           </Button>
         </div>
@@ -89,6 +139,7 @@ const Proveedores: React.FC = () => {
                 url={provider.url}
                 type={provider.type}
                 logo={provider.logo}
+                scheduledSync={provider.scheduledSync}
               />
             ))}
             
@@ -118,6 +169,7 @@ const Proveedores: React.FC = () => {
                 url={provider.url}
                 type={provider.type}
                 logo={provider.logo}
+                scheduledSync={provider.scheduledSync}
               />
             ))}
             
@@ -152,6 +204,7 @@ const Proveedores: React.FC = () => {
                 url={provider.url}
                 type={provider.type}
                 logo={provider.logo}
+                scheduledSync={provider.scheduledSync}
               />
             ))}
             

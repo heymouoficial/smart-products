@@ -18,6 +18,19 @@ import { useProviders } from "@/contexts/ProvidersContext";
 
 const Dashboard: React.FC = () => {
   const { activeProviders } = useProviders();
+
+  if (activeProviders.length === 0) {
+    return (
+      <Layout>
+        <div className="p-8">
+          <h2 className="text-xl font-bold mb-4">Cargando proveedores...</h2>
+          <p className="text-muted-foreground">
+            Por favor espere mientras se cargan los datos iniciales
+          </p>
+        </div>
+      </Layout>
+    );
+  }
   
   // Datos de ejemplo
   const activities = [
