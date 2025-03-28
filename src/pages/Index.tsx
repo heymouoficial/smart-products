@@ -5,7 +5,7 @@ import StatsCard from "@/components/StatsCard";
 import SyncProgress from "@/components/SyncProgress";
 import RecentActivity from "@/components/RecentActivity";
 import ProviderCard from "@/components/ProviderCard";
-import { Button } from "@/components/ui/button";
+import AddProviderDialog from "@/components/AddProviderDialog";
 import { 
   BarChart, 
   ShoppingCart, 
@@ -13,45 +13,13 @@ import {
   Store, 
   Plus
 } from "lucide-react";
-import { Button as MovingButton } from "@/components/ui/moving-border";
+import { Button } from "@/components/ui/button";
+import { useProviders } from "@/contexts/ProvidersContext";
 
 const Dashboard: React.FC = () => {
+  const { activeProviders } = useProviders();
+  
   // Datos de ejemplo
-  const stats = [
-    {
-      id: "1",
-      title: "Total Productos",
-      value: "1,248",
-      description: "32 añadidos hoy",
-      icon: <ShoppingCart size={20} />,
-      trend: "up" as const,
-      trendValue: "12%"
-    },
-    {
-      id: "2",
-      title: "Proveedores",
-      value: "4",
-      description: "2 activos",
-      icon: <Store size={20} />,
-    },
-    {
-      id: "3",
-      title: "Sincronizaciones",
-      value: "24",
-      description: "Última: hace 45min",
-      icon: <RefreshCw size={20} />,
-    },
-    {
-      id: "4",
-      title: "Conversión Exitosa",
-      value: "98%",
-      description: "2% errores",
-      icon: <BarChart size={20} />,
-      trend: "up" as const,
-      trendValue: "3%"
-    }
-  ];
-
   const activities = [
     {
       id: "a1",
@@ -79,22 +47,42 @@ const Dashboard: React.FC = () => {
     }
   ];
 
-  const providers = [
+  // Calcular estadísticas basadas en proveedores
+  const totalProducts = activeProviders.reduce((total, provider) => total + provider.productCount, 0);
+  const totalProviders = activeProviders.length;
+  
+  const stats = [
     {
-      id: "p1",
-      name: "Proveedor A",
-      status: "active" as const,
-      lastSync: "Hace 45 minutos",
-      productCount: 743,
-      syncProgress: 100
+      id: "1",
+      title: "Total Productos",
+      value: totalProducts.toString(),
+      description: "Disponibles para sincronizar",
+      icon: <ShoppingCart size={20} />,
+      trend: "up" as const,
+      trendValue: "12%"
     },
     {
-      id: "p2",
-      name: "Proveedor B",
-      status: "error" as const,
-      lastSync: "Hace 2 días",
-      productCount: 128,
-      syncProgress: 65
+      id: "2",
+      title: "Proveedores",
+      value: totalProviders.toString(),
+      description: `${activeProviders.length} activos`,
+      icon: <Store size={20} />,
+    },
+    {
+      id: "3",
+      title: "Sincronizaciones",
+      value: "24",
+      description: "Última: hace 45min",
+      icon: <RefreshCw size={20} />,
+    },
+    {
+      id: "4",
+      title: "Conversión Exitosa",
+      value: "98%",
+      description: "2% errores",
+      icon: <BarChart size={20} />,
+      trend: "up" as const,
+      trendValue: "3%"
     }
   ];
 
@@ -105,14 +93,7 @@ const Dashboard: React.FC = () => {
           <h1 className="text-2xl font-bold">Inicio</h1>
           <p className="text-muted-foreground">Bienvenido de nuevo, Admin</p>
         </div>
-        <MovingButton 
-          containerClassName="w-auto h-10"
-          borderClassName="bg-[radial-gradient(var(--primary)_40%,transparent_60%)]"
-          className="bg-dark/50 border-dark-border text-sm h-full"
-          borderRadius="0.5rem"
-        >
-          <Plus size={18} className="mr-2" /> Nuevo Proveedor
-        </MovingButton>
+        <AddProviderDialog />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -131,14 +112,29 @@ const Dashboard: React.FC = () => {
           />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {providers.map((provider) => (
-              <ProviderCard key={provider.id} {...provider} />
+            {activeProviders.slice(0, 2).map((provider) => (
+              <ProviderCard 
+                key={provider.id} 
+                id={provider.id}
+                name={provider.name}
+                status={provider.status}
+                lastSync={provider.lastSync}
+                productCount={provider.productCount}
+                syncProgress={provider.syncProgress}
+                url={provider.url}
+                type={provider.type}
+                logo={provider.logo}
+              />
             ))}
             
             <div className="flex items-center justify-center rounded-xl p-6 border border-dashed border-white/10 hover:border-primary/50 transition-all h-full backdrop-blur-md">
-              <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
-                <Plus size={18} className="mr-2" /> Añadir Proveedor
-              </Button>
+              <AddProviderDialog 
+                trigger={
+                  <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+                    <Plus size={18} className="mr-2" /> Añadir Proveedor
+                  </Button>
+                }
+              />
             </div>
           </div>
         </div>

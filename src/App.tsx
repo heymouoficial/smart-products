@@ -7,22 +7,25 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Index";
 import Proveedores from "./pages/Proveedores";
 import NotFound from "./pages/NotFound";
+import { ProvidersProvider } from "./contexts/ProvidersContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/proveedores" element={<Proveedores />} />
-          {/* Otras rutas se agregarán a medida que se implementen las páginas */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <ProvidersProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/proveedores" element={<Proveedores />} />
+            {/* Otras rutas se agregarán a medida que se implementen las páginas */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </ProvidersProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

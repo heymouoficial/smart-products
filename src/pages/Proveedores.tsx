@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,30 @@ import {
   RefreshCw
 } from "lucide-react";
 import { Button as MovingButton } from "@/components/ui/moving-border";
+import { useProviders } from "@/contexts/ProvidersContext";
+import ProviderCard from "@/components/ProviderCard";
+import AddProviderDialog from "@/components/AddProviderDialog";
 
 const Proveedores: React.FC = () => {
+  const { providers, activeProviders, inactiveProviders } = useProviders();
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Filtrar proveedores por término de búsqueda
+  const filteredProviders = providers.filter(provider => 
+    provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    provider.url.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const filteredActive = activeProviders.filter(provider => 
+    provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    provider.url.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const filteredInactive = inactiveProviders.filter(provider => 
+    provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    provider.url.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
@@ -23,20 +45,18 @@ const Proveedores: React.FC = () => {
           <h1 className="text-2xl font-bold">Proveedores</h1>
           <p className="text-muted-foreground">Gestiona tus proveedores de productos</p>
         </div>
-        <MovingButton 
-          containerClassName="w-auto h-10"
-          borderClassName="bg-[radial-gradient(var(--primary)_40%,transparent_60%)]"
-          className="bg-dark/50 border-dark-border text-sm h-full"
-          borderRadius="0.5rem"
-        >
-          <Plus size={18} className="mr-2" /> Nuevo Proveedor
-        </MovingButton>
+        <AddProviderDialog />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-          <Input placeholder="Buscar proveedores..." className="pl-10" />
+          <Input 
+            placeholder="Buscar proveedores..." 
+            className="pl-10" 
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
@@ -50,145 +70,104 @@ const Proveedores: React.FC = () => {
 
       <Tabs defaultValue="activos" className="mb-6">
         <TabsList className="bg-secondary">
-          <TabsTrigger value="activos">Activos (2)</TabsTrigger>
-          <TabsTrigger value="inactivos">Inactivos (1)</TabsTrigger>
-          <TabsTrigger value="todos">Todos (3)</TabsTrigger>
+          <TabsTrigger value="activos">Activos ({filteredActive.length})</TabsTrigger>
+          <TabsTrigger value="inactivos">Inactivos ({filteredInactive.length})</TabsTrigger>
+          <TabsTrigger value="todos">Todos ({filteredProviders.length})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="activos" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <ProviderDetailCard 
-              name="Proveedor A"
-              url="https://proveedor-a.com/api"
-              productCount={743}
-              type="API"
-              status="active"
-              lastSync="Hace 45 minutos"
-            />
-            
-            <ProviderDetailCard 
-              name="Proveedor C"
-              url="https://proveedor-c.com/products"
-              productCount={377}
-              type="Scraping"
-              status="active"
-              lastSync="Hace 1 día"
-            />
+            {filteredActive.map(provider => (
+              <ProviderCard 
+                key={provider.id} 
+                id={provider.id}
+                name={provider.name}
+                status={provider.status}
+                lastSync={provider.lastSync}
+                productCount={provider.productCount}
+                syncProgress={provider.syncProgress}
+                url={provider.url}
+                type={provider.type}
+                logo={provider.logo}
+              />
+            ))}
             
             <div className="flex items-center justify-center rounded-xl p-6 border border-dashed border-white/10 hover:border-primary/50 transition-all h-[300px] backdrop-blur-md">
-              <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
-                <Plus size={18} className="mr-2" /> Añadir Proveedor
-              </Button>
+              <AddProviderDialog 
+                trigger={
+                  <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+                    <Plus size={18} className="mr-2" /> Añadir Proveedor
+                  </Button>
+                }
+              />
             </div>
           </div>
         </TabsContent>
         
         <TabsContent value="inactivos" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <ProviderDetailCard 
-              name="Proveedor B"
-              url="https://proveedor-b.com/feed.xml"
-              productCount={128}
-              type="XML"
-              status="error"
-              lastSync="Hace 2 días"
-            />
+            {filteredInactive.map(provider => (
+              <ProviderCard 
+                key={provider.id} 
+                id={provider.id}
+                name={provider.name}
+                status={provider.status}
+                lastSync={provider.lastSync}
+                productCount={provider.productCount}
+                syncProgress={provider.syncProgress}
+                url={provider.url}
+                type={provider.type}
+                logo={provider.logo}
+              />
+            ))}
+            
+            {filteredInactive.length === 0 && (
+              <div className="col-span-3 flex items-center justify-center p-10 text-center border border-dashed border-white/10 rounded-xl">
+                <div>
+                  <p className="text-muted-foreground mb-4">No hay proveedores inactivos o con error que coincidan con tu búsqueda.</p>
+                  <AddProviderDialog 
+                    trigger={
+                      <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+                        <Plus size={18} className="mr-2" /> Añadir Proveedor
+                      </Button>
+                    }
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
         
         <TabsContent value="todos" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Mostraría todos los proveedores */}
+            {filteredProviders.map(provider => (
+              <ProviderCard 
+                key={provider.id} 
+                id={provider.id}
+                name={provider.name}
+                status={provider.status}
+                lastSync={provider.lastSync}
+                productCount={provider.productCount}
+                syncProgress={provider.syncProgress}
+                url={provider.url}
+                type={provider.type}
+                logo={provider.logo}
+              />
+            ))}
+            
+            <div className="flex items-center justify-center rounded-xl p-6 border border-dashed border-white/10 hover:border-primary/50 transition-all h-[300px] backdrop-blur-md">
+              <AddProviderDialog 
+                trigger={
+                  <Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10">
+                    <Plus size={18} className="mr-2" /> Añadir Proveedor
+                  </Button>
+                }
+              />
+            </div>
           </div>
         </TabsContent>
       </Tabs>
     </Layout>
-  );
-};
-
-interface ProviderDetailCardProps {
-  name: string;
-  url: string;
-  productCount: number;
-  type: "API" | "XML" | "JSON" | "Scraping";
-  status: "active" | "inactive" | "error";
-  lastSync: string;
-}
-
-const ProviderDetailCard: React.FC<ProviderDetailCardProps> = ({
-  name,
-  url,
-  productCount,
-  type,
-  status,
-  lastSync
-}) => {
-  return (
-    <div className="rounded-xl p-6 glass border border-white/10 hover:border-primary/50 transition-all">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-md flex items-center justify-center bg-primary/10 text-primary">
-            <Link2 size={20} />
-          </div>
-          <div>
-            <h3 className="font-semibold">{name}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <div className={`h-2 w-2 rounded-full ${
-                status === "active" ? "bg-green-400" : 
-                status === "inactive" ? "bg-muted" : 
-                "bg-red-400"
-              }`}></div>
-              <span className="text-xs text-muted-foreground">
-                {status === "active" ? "Activo" : 
-                 status === "inactive" ? "Inactivo" : 
-                 "Error"}
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-          <MoreHorizontal size={18} />
-        </Button>
-      </div>
-      
-      <div className="space-y-4 mt-6">
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">URL del proveedor</p>
-          <div className="flex items-center gap-2">
-            <p className="text-sm truncate flex-1">{url}</p>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary h-6 w-6">
-              <ExternalLink size={14} />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Productos</p>
-            <p className="font-medium">{productCount}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Tipo</p>
-            <p className="font-medium">{type}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Última sync</p>
-            <p className="font-medium">{lastSync}</p>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center mt-4">
-          <Button variant="outline" size="sm" className="border-dark-border text-muted-foreground hover:text-foreground">
-            Ver detalles
-          </Button>
-          
-          <Button size="sm" className="bg-primary hover:bg-electric-dark text-white">
-            <RefreshCw size={14} className="mr-1" /> Sincronizar
-          </Button>
-        </div>
-      </div>
-    </div>
   );
 };
 
