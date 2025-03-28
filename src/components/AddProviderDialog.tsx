@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import AddProviderForm from "./AddProviderForm";
 import { Button as MovingButton } from "@/components/ui/moving-border";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AddProviderDialogProps {
   trigger?: React.ReactNode;
@@ -23,6 +24,7 @@ const AddProviderDialog: React.FC<AddProviderDialogProps> = ({
   onSuccess 
 }) => {
   const [open, setOpen] = React.useState(false);
+  const isMobile = useIsMobile();
 
   const handleSuccess = () => {
     setOpen(false);
@@ -33,17 +35,23 @@ const AddProviderDialog: React.FC<AddProviderDialogProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <MovingButton 
-            containerClassName="w-auto h-10"
-            borderClassName="bg-[radial-gradient(var(--primary)_40%,transparent_60%)]"
-            className="bg-dark/50 border-dark-border text-sm h-full"
-            borderRadius="0.5rem"
-          >
-            <Plus size={18} className="mr-2" /> Nuevo Proveedor
-          </MovingButton>
+          isMobile ? (
+            <Button className="w-full" size="sm">
+              <Plus size={18} className="mr-2" /> Nuevo Proveedor
+            </Button>
+          ) : (
+            <MovingButton 
+              containerClassName="w-auto h-10"
+              borderClassName="bg-[radial-gradient(var(--primary)_40%,transparent_60%)]"
+              className="bg-dark/50 border-dark-border text-sm h-full"
+              borderRadius="0.5rem"
+            >
+              <Plus size={18} className="mr-2" /> Nuevo Proveedor
+            </MovingButton>
+          )
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] glass border border-white/10">
+      <DialogContent className="w-[95vw] max-w-[500px] glass border border-white/10">
         <DialogHeader>
           <DialogTitle>Añadir Nuevo Proveedor</DialogTitle>
           <DialogDescription>
