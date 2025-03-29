@@ -12,6 +12,7 @@ import Proveedores from "./pages/Proveedores";
 import NotFound from "./pages/NotFound";
 import { ProvidersProvider } from "./contexts/ProvidersContext";
 import { useEffect, useState } from "react";
+import { logger } from "./services/logger";
 
 const queryClient = new QueryClient();
 
@@ -22,16 +23,16 @@ const App = () => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('Iniciando autenticación con Supabase');
+        logger.info('Iniciando autenticación con Supabase', { category: 'auth' });
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) throw error;
-        console.log('Sesión obtenida:', session);
+        logger.info('Sesión obtenida correctamente', { category: 'auth', context: session ? `Usuario: ${session.user.email}` : 'Sin sesión' });
         
         setSession(session);
 
         if (session) {
-          console.log('Buscando perfil del usuario');
+          logger.info('Buscando perfil del usuario', { category: 'auth', user_id: session.user.id });
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('onboarding_complete')
@@ -39,17 +40,17 @@ const App = () => {
             .single();
 
           if (profileError) throw profileError;
-          console.log('Perfil cargado:', profile);
+          logger.info('Perfil de usuario cargado', { category: 'auth', user_id: session.user.id, context: profile ? `Onboarding: ${profile.onboarding_complete}` : 'Sin perfil' });
 
           if (!profile?.onboarding_complete) {
-            console.log('Iniciando tour de onboarding');
+            logger.info('Iniciando tour de onboarding para nuevo usuario', { category: 'system', user_id: session.user.id });
             useTour.getState().startTour();
           }
         }
       } catch (error) {
-        console.error('Error en autenticación:', error);
+        logger.error('Error en proceso de autenticación', { category: 'auth', error: error as Error });
       } finally {
-        console.log('Finalizando carga inicial');
+        logger.info('Finalizando carga inicial de la aplicación', { category: 'system' });
         setLoading(false);
       }
     };
@@ -75,15 +76,39 @@ const App = () => {
     };
   }, []);
 
+  // Verificar periodicamente el estado de autenticación - Movido antes de las condiciones de renderizado
+  useEffect(() => {
+    // Solo configurar el intervalo si hay una sesión activa
+    let checkAuth: NodeJS.Timeout | null = null;
+    
+    // La lógica condicional está dentro del efecto, pero el hook siempre se ejecuta
+    if (session) {
+      checkAuth = setInterval(async () => {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!currentSession) {
+          window.location.href = '/';
+        }
+      }, 30000);
+    }
+
+    return () => {
+      if (checkAuth) clearInterval(checkAuth);
+    };
+  }, [session]);
+
   if (loading) return <div className="flex justify-center items-center min-h-screen">Cargando...</div>;
 
-  if (!session) return (
-    <div className="min-h-screen flex items-center justify-center bg-dark">
-      <div className="w-full max-w-md p-8 bg-card rounded-xl shadow-lg">
-        <AuthForm />
+  // Redirigir al login solo si no estamos ya en la página de login
+  if (!session && window.location.pathname !== '/login') {
+    window.location.href = '/login';
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark">
+        <div className="w-full max-w-md p-8 bg-card rounded-xl shadow-lg">
+          <AuthForm />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -94,6 +119,13 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/login" element={
+                <div className="min-h-screen flex items-center justify-center bg-dark">
+                  <div className="w-full max-w-md p-8 bg-card rounded-xl shadow-lg">
+                    <AuthForm />
+                  </div>
+                </div>
+              } />
               <Route path="/proveedores" element={<Proveedores />} />
               {/* Otras rutas se agregarán a medida que se implementen las páginas */}
               <Route path="*" element={<NotFound />} />

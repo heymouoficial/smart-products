@@ -43,7 +43,7 @@ export const configureLLM = async (config: LLMConfig) => {
       if (!response.ok) throw new Error('Error de autenticación con DeepSeek');
     }
 
-|    // Guardar la configuración en localStorage
+    // Guardar la configuración en localStorage
     localStorage.setItem('llmConfig', JSON.stringify(config));
 
     toast({

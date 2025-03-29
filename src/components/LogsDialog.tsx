@@ -9,87 +9,73 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { FileText, Download, RefreshCw } from "lucide-react";
+import { FileText, Download, RefreshCw, Filter } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Provider } from "@/contexts/ProvidersContext";
 import { useToast } from "@/hooks/use-toast";
+import { logger, LogEntry } from "@/services/logger";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/services/supabaseClient";
 
 interface LogsDialogProps {
   provider: Provider;
   trigger?: React.ReactNode;
 }
 
-interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: "info" | "warning" | "error";
-  message: string;
-}
+type LogLevel = "info" | "warn" | "error" | "debug";
+type LogCategory = "system" | "auth" | "sync" | "api" | "scraping" | "llm";
 
 const LogsDialog: React.FC<LogsDialogProps> = ({ provider, trigger }) => {
   const [open, setOpen] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<LogLevel | "">("");
+  const [selectedCategory, setSelectedCategory] = useState<LogCategory | "">("");
   const { toast } = useToast();
 
-  // Generar logs de ejemplo
-  const generateSampleLogs = () => {
+  // Cargar logs reales desde Supabase
+  const fetchLogs = async () => {
     setLoading(true);
     
-    setTimeout(() => {
-      const sampleLogs: LogEntry[] = [];
-      const levels: ("info" | "warning" | "error")[] = ["info", "warning", "error"];
-      const messageTemplates = [
-        "Iniciando sincronización de {provider}",
-        "Conectando con {url}",
-        "Extrayendo productos de {provider}",
-        "Encontrados {count} productos",
-        "Procesando datos de productos",
-        "Actualizando base de datos local",
-        "Sincronización completada con {success} éxitos y {failed} fallos",
-        "Error al conectar con {url}",
-        "Timeout en la solicitud a {provider}",
-        "Error de formato en respuesta de {provider}"
-      ];
+    try {
+      // Obtener el ID del usuario actual
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
       
-      const timestamps = [];
-      const now = new Date();
-      for (let i = 0; i < 15; i++) {
-        const pastTime = new Date(now.getTime() - i * 60000 * (Math.random() * 10 + 1));
-        timestamps.push(pastTime);
-      }
-      timestamps.sort((a, b) => b.getTime() - a.getTime());
+      // Obtener logs filtrados
+      const fetchedLogs = await logger.getPersistedLogs({
+        limit: 50,
+        level: selectedLevel || undefined,
+        category: selectedCategory || undefined,
+        provider_id: provider.id,
+        user_id: userId
+      });
       
-      for (let i = 0; i < 15; i++) {
-        const level = levels[Math.floor(Math.random() * levels.length)];
-        let message = messageTemplates[Math.floor(Math.random() * messageTemplates.length)];
-        
-        message = message
-          .replace("{provider}", provider.name)
-          .replace("{url}", provider.url)
-          .replace("{count}", Math.floor(Math.random() * 1000 + 50).toString())
-          .replace("{success}", Math.floor(Math.random() * 100).toString())
-          .replace("{failed}", Math.floor(Math.random() * 10).toString());
-        
-        sampleLogs.push({
-          id: `log-${i}`,
-          timestamp: timestamps[i].toISOString(),
-          level,
-          message
-        });
-      }
+      // Convertir nivel "warn" a "warning" para mantener compatibilidad con la interfaz
+      const formattedLogs = fetchedLogs.map(log => ({
+        ...log,
+        id: log.id || `log-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        level: log.level === 'warn' ? 'warning' as any : log.level
+      }));
       
-      setLogs(sampleLogs);
+      setLogs(formattedLogs);
+    } catch (error) {
+      console.error('Error al cargar logs:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los logs. Intente nuevamente.",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   useEffect(() => {
     if (open) {
-      generateSampleLogs();
+      fetchLogs();
     }
-  }, [open]);
+  }, [open, selectedLevel, selectedCategory]);
 
   const downloadLogs = () => {
     toast({
@@ -98,9 +84,10 @@ const LogsDialog: React.FC<LogsDialogProps> = ({ provider, trigger }) => {
     });
     
     setTimeout(() => {
-      const logText = logs.map(log => 
-        `[${new Date(log.timestamp).toLocaleString()}] [${log.level.toUpperCase()}] ${log.message}`
-      ).join("\n");
+      const logText = logs.map(log => {
+        const category = log.category ? `[${log.category.toUpperCase()}]` : '';
+        return `[${new Date(log.timestamp).toLocaleString()}] [${log.level.toUpperCase()}] ${category} ${log.message} ${log.context ? `(${log.context})` : ''}`;
+      }).join("\n");
       
       const blob = new Blob([logText], { type: "text/plain" });
       const url = window.URL.createObjectURL(blob);
@@ -152,9 +139,42 @@ const LogsDialog: React.FC<LogsDialogProps> = ({ provider, trigger }) => {
               </Badge>
             </div>
             
-            <Button onClick={generateSampleLogs} variant="ghost" size="sm" disabled={loading}>
+            <Button onClick={fetchLogs} variant="ghost" size="sm" disabled={loading}>
               <RefreshCw size={14} className={`mr-1 ${loading ? "animate-spin" : ""}`} /> Actualizar
             </Button>
+          </div>
+          
+          <div className="flex gap-2 items-center">
+            <Filter size={14} className="text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Filtrar por:</span>
+            
+            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <SelectTrigger className="h-8 w-[120px]">
+                <SelectValue placeholder="Nivel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="info">Info</SelectItem>
+                <SelectItem value="warn">Advertencia</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
+                <SelectItem value="debug">Debug</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="h-8 w-[120px]">
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="system">Sistema</SelectItem>
+                <SelectItem value="auth">Autenticación</SelectItem>
+                <SelectItem value="sync">Sincronización</SelectItem>
+                <SelectItem value="api">API</SelectItem>
+                <SelectItem value="scraping">Scraping</SelectItem>
+                <SelectItem value="llm">LLM</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {loading ? (
@@ -174,7 +194,13 @@ const LogsDialog: React.FC<LogsDialogProps> = ({ provider, trigger }) => {
                     }`}>
                       [{log.level.toUpperCase()}]
                     </span>
+                    {log.category && (
+                      <span className="ml-2 text-purple-400">[{log.category.toUpperCase()}]</span>
+                    )}
                     <span className="ml-2">{log.message}</span>
+                    {log.context && (
+                      <span className="ml-2 text-gray-400">({log.context})</span>
+                    )}
                   </div>
                 ))}
               </div>

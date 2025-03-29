@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { scrapWebsite } from "@/services/scrapingService";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/services/supabaseClient";
+import { logger } from "@/services/logger";
 
 // Definir el tipo para un proveedor
 export interface Provider {
@@ -60,6 +61,8 @@ interface ProvidersContextType {
   providers: Provider[];
   activeProviders: Provider[];
   inactiveProviders: Provider[];
+  loading: boolean;
+  error: string | null;
   addProvider: (provider: Provider) => void;
   updateProvider: (id: string, provider: Partial<Provider>) => void;
   removeProvider: (id: string) => void;

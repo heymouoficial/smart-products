@@ -1,5 +1,5 @@
 
-import { scrape } from 'llm-scraper';
+import axios from 'axios';
 import { LLMConfig } from './llmService';
 
 export interface ScrapResult {
@@ -28,41 +28,41 @@ export const scrapWebsite = async (url: string, llmConfig: LLMConfig): Promise<S
       throw new Error('Configuración LLM no disponible');
     }
 
-    const result = await scrape({
+    const response = await axios.post('https://api.deepseek.com/v1/scrape', {
       url,
-      llm: {
-        apiKey: llmConfig.apiKey,
-        provider: llmConfig.provider,
-        model: llmConfig.model,
-        maxTokens: llmConfig.maxTokens
-      },
-      schema: {
-        products: [{
-          name: 'string',
-          price: 'number',
-          currency: 'string',
-          sku: 'string?',
-          description: 'string?',
-          images: 'string[]?',
-          stock: 'number?',
-          category: 'string?',
-          attributes: 'object?'
-        }]
+      config: {
+        api_key: llmConfig.apiKey,
+        extract_rules: {
+          products: {
+            listItem: '.product',
+            data: {
+              name: 'h2',
+              price: '.price',
+              description: '.description',
+              images: ['img@src'],
+              stock: '.stock',
+              category: '.category',
+              attributes: {
+                listItem: '.attributes li',
+                data: {
+                  name: '.attr-name',
+                  value: '.attr-value'
+                }
+              }
+            }
+          }
+        }
       }
     });
 
-    if (!result.products || result.products.length === 0) {
-      return {
-        success: false,
-        message: 'No se encontraron productos',
-        error: 'El scraping no encontró datos estructurados'
-      };
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Error en la API de DeepSeek');
     }
 
     return {
       success: true,
-      message: `Se encontraron ${result.products.length} productos`,
-      data: result.products
+      message: `Found ${response.data.data.products.length} products`,
+      data: response.data.data.products
     };
   } catch (error) {
     console.error('[Scrap Service] Error:', error);
@@ -111,5 +111,5 @@ export const adaptToWooCommerce = (products: Product[]) => {
 
 export default {
   scrapWebsite,
-  mapToWooCommerceFormat
+  adaptToWooCommerce
 };

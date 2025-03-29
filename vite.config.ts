@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   build: {
-    target: ['es2022', 'node20'],
+    target: ['esnext'],
     commonjsOptions: {
       include: [/node_modules\/node-llama-cpp/]
     },
